@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Device.Gpio;
 using System.Net.Http;
+using System.Threading;
 
 namespace son.Net_rpi
 {
@@ -9,37 +10,38 @@ namespace son.Net_rpi
         static void Main(string[] args)
         {
             using var controller = new GpioController();
-            using var http = new HttpClient();
+           
             var ledpin = 18;
             var buttonpin = 1;
-            
-            
+
             controller.OpenPin(ledpin, PinMode.Output);
-            controller.OpenPin(buttonpin, PinMode.InputPullUp);
+            controller.OpenPin(buttonpin, PinMode.Input);
 
             try
             {
                 while (true)
                 {
-                    if (controller.Read(buttonpin) == false)
+                    var button = controller.Read(buttonpin);
+                    if (button.Equals(true))
                     {
-                        controller.Write(ledpin, PinValue.High);
-                        
                         Console.WriteLine("Making API Call");
-                        
-                        var request = new HttpRequestMessage
+                        if (CallAPI())
                         {
-                            Method = HttpMethod.Get,
-                            RequestUri = new Uri("https://apiSonnete"),
-                        };
-                        
-                        HttpResponseMessage response = http.Send(request);
-                        Console.Write(response.EnsureSuccessStatusCode());
-                    }
-                    
-                    else
-                    {
-                        controller.Write(ledpin, PinValue.Low); 
+                            controller.Write(ledpin, PinValue.High);
+                            Thread.Sleep(1000);
+                            controller.Write(ledpin, PinValue.Low);
+                            Thread.Sleep(1000);
+                            controller.Write(ledpin, PinValue.High);
+                            Thread.Sleep(1000);
+                            controller.Write(ledpin, PinValue.Low);
+
+                        }
+                        else
+                        {
+                            controller.Write(ledpin, PinValue.High);
+                            Thread.Sleep(3000);
+                            controller.Write(ledpin, PinValue.Low); 
+                        }
                     }
                 }
             }
@@ -51,5 +53,30 @@ namespace son.Net_rpi
                 throw;
             }
         }
+
+        private static bool CallAPI()
+        {
+            using var http = new HttpClient();
+            
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri("https://apiSonnete"),
+            };
+                        
+            HttpResponseMessage response = http.Send(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.Write("Request succeed");
+                return true;
+            }
+            else
+            {
+                Console.Write("Request failed");
+                return false;
+            }
+        }
+
     }
 }
