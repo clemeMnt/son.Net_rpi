@@ -1,0 +1,13 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/contentModel.xml
+/projectSettingsUpdater.xml
+/modules.xml
+/.idea.son.Net_rpi.iml
+# Datasource local storage ignored files
+/../../../../../../../../../../../../:\Users\cleme\Documents\ESAIP\ING4\Informatique\.Net\son.Net_rpi\.idea\.idea.son.Net_rpi\.idea/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
