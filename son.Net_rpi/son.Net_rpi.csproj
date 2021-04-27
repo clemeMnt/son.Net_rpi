@@ -9,4 +9,8 @@
       <PackageReference Include="Iot.Device.Bindings" Version="1.1.0-*" />
     </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Google.Cloud.Firestore" Version="1.1.0-beta01" />
+  </ItemGroup>
+
 </Project>
