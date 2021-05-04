@@ -1,82 +1,52 @@
 ﻿using System;
+using son.Net_rpi.Configuration;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System.Device.Gpio;
 using System.Net.Http;
 using System.Threading;
+using System.IO;
 
 namespace son.Net_rpi
 {
     class Program
     {
+        private static ServiceCollection Services { get; set; }
+
         static void Main(string[] args)
         {
-            using var controller = new GpioController();
-           
-            var ledpin = 18;
-            var buttonpin = 1;
+            Services = new ServiceCollection();
+            ConfigureServices(Services);
 
-            controller.OpenPin(ledpin, PinMode.Output);
-            controller.OpenPin(buttonpin, PinMode.Input);
+            IServiceProvider serviceProvider = Services.BuildServiceProvider();
 
             try
             {
-                while (true)
-                {
-                    var button = controller.Read(buttonpin);
-                    if (button.Equals(true))
-                    {
-                        Console.WriteLine("Making API Call");
-                        if (CallAPI())
-                        {
-                            controller.Write(ledpin, PinValue.High);
-                            Thread.Sleep(1000);
-                            controller.Write(ledpin, PinValue.Low);
-                            Thread.Sleep(1000);
-                            controller.Write(ledpin, PinValue.High);
-                            Thread.Sleep(1000);
-                            controller.Write(ledpin, PinValue.Low);
-
-                        }
-                        else
-                        {
-                            controller.Write(ledpin, PinValue.High);
-                            Thread.Sleep(3000);
-                            controller.Write(ledpin, PinValue.Low); 
-                        }
-                    }
-                }
+                serviceProvider.GetService<SonNet>().Run();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                //Allow to delete state of the led
-                controller.ClosePin(ledpin);
                 throw;
             }
         }
 
-        private static bool CallAPI()
+        private static void ConfigureServices(IServiceCollection services)
         {
-            using var http = new HttpClient();
-            
-            var request = new HttpRequestMessage
-            {
-                Method = HttpMethod.Get,
-                RequestUri = new Uri("https://apiSonnete"),
-            };
-                        
-            HttpResponseMessage response = http.Send(request);
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", false, true)
+                .Build();
 
-            if (response.IsSuccessStatusCode)
-            {
-                Console.Write("Request succeed");
-                return true;
-            }
-            else
-            {
-                Console.Write("Request failed");
-                return false;
-            }
+            services.AddSingleton(configuration);
+
+            services.Configure<AppConfiguration>(configuration.GetSection("AppConfiguration"));
+
+            // Add app
+            services.AddTransient<SonNet>();
         }
+
+
 
     }
 }
