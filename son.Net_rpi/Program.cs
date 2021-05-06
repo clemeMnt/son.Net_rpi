@@ -22,6 +22,7 @@ namespace son.Net_rpi
 
             try
             {
+                Console.WriteLine("lets try yo use service");
                 serviceProvider.GetService<SonNet>().Run();
             }
             catch (Exception e)

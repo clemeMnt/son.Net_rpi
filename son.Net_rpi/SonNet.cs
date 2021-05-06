@@ -10,44 +10,44 @@ namespace son.Net_rpi
 {
     class SonNet
     {
-        private readonly AppConfiguration config;
+        private readonly AppConfiguration _config;
 
         public SonNet(IOptions<AppConfiguration> config)
         {
-            this.config = config.Value;
+            this._config = config.Value;
         }
 
         public void Run()
         {         
             using var controller = new GpioController();
 
-            controller.OpenPin(config.ledPin, PinMode.Output);
-            controller.OpenPin(config.boutonPin, PinMode.InputPullUp);
-
+            controller.OpenPin(_config.ledPin, PinMode.Output);
+            controller.OpenPin(_config.boutonPin, PinMode.InputPullUp);
+            
             try
             {
                 while (true)
                 {                 
-                    if (controller.Read(config.boutonPin) == false)
+                    if (controller.Read(_config.boutonPin) == false)
                     {
                         Console.WriteLine("Making API Call");
                         if (CallAPI())
                         {
-                            controller.Write(config.ledPin, PinValue.High);
+                            controller.Write(_config.ledPin, PinValue.High);
                             Thread.Sleep(1000);
-                            controller.Write(config.ledPin, PinValue.Low);
+                            controller.Write(_config.ledPin, PinValue.Low);
                             Thread.Sleep(1000);
-                            controller.Write(config.ledPin, PinValue.High);
+                            controller.Write(_config.ledPin, PinValue.High);
                             Thread.Sleep(1000);
-                            controller.Write(config.ledPin, PinValue.Low);
-                            Thread.Sleep(4000);
+                            controller.Write(_config.ledPin, PinValue.Low);
+                            Thread.Sleep(3000);
 
                         }
                         else
                         {
-                            controller.Write(config.ledPin, PinValue.High);
+                            controller.Write(_config.ledPin, PinValue.High);
                             Thread.Sleep(5000);
-                            controller.Write(config.ledPin, PinValue.Low);
+                            controller.Write(_config.ledPin, PinValue.Low);
                         }
                     }
                 }
@@ -56,7 +56,7 @@ namespace son.Net_rpi
             {
                 Console.WriteLine(e);
                 //Allow to delete state of the led
-                controller.ClosePin(config.ledPin);
+                controller.ClosePin(_config.ledPin);
                 throw;
             }
         }
@@ -69,10 +69,11 @@ namespace son.Net_rpi
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
-                RequestUri = new Uri("https://" + config.UrlServer + "/sound"),
+                RequestUri = new Uri("http://" + _config.UrlServer + "/sound"),
             };
-
-            HttpResponseMessage response = http.Send(request);
+            
+            Task<HttpResponseMessage> task = http.SendAsync(request);
+            HttpResponseMessage response = task.Result;
 
             if (response.IsSuccessStatusCode)
             {
