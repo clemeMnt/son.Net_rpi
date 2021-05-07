@@ -12,27 +12,35 @@ namespace son.Net_rpi
     {
         private readonly AppConfiguration _config;
 
+        //Constructor 
+        //Allow to retrieve configurations variables
         public SonNet(IOptions<AppConfiguration> config)
         {
             this._config = config.Value;
         }
 
+        //Function automatically runner when the class is run
         public void Run()
         {         
+            //Define object controller to process Raspberry
             using var controller = new GpioController();
-
+            
             controller.OpenPin(_config.ledPin, PinMode.Output);
             controller.OpenPin(_config.boutonPin, PinMode.InputPullUp);
             
+            //Loop to avoid runnable error
             try
             {
+                //while function allow to create a infinite loop 
                 while (true)
-                {                 
+                {          
+                    //Process the code if the button is push
                     if (controller.Read(_config.boutonPin) == false)
                     {
                         Console.WriteLine("Making API Call");
                         if (CallAPI())
                         {
+                            //Blinding led when the request 'ring' is succeed
                             controller.Write(_config.ledPin, PinValue.High);
                             Thread.Sleep(1000);
                             controller.Write(_config.ledPin, PinValue.Low);
@@ -45,6 +53,8 @@ namespace son.Net_rpi
                         }
                         else
                         {
+                            //Blinding led when the request 'ring' is not succeed
+                            //Error can due to internet connection or bad response 
                             controller.Write(_config.ledPin, PinValue.High);
                             Thread.Sleep(5000);
                             controller.Write(_config.ledPin, PinValue.Low);
@@ -61,6 +71,8 @@ namespace son.Net_rpi
             }
         }
 
+        //Function to request the server
+        //return bool if the request is succeed
         private bool CallAPI()
         {
           

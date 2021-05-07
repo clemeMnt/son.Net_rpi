@@ -15,14 +15,16 @@ namespace son.Net_rpi
 
         static void Main(string[] args)
         {
+          
+            //Define object to declare a new service
             Services = new ServiceCollection();
             ConfigureServices(Services);
-
             IServiceProvider serviceProvider = Services.BuildServiceProvider();
 
             try
             {
                 Console.WriteLine("lets try yo use service");
+                //Define service SonNet 
                 serviceProvider.GetService<SonNet>().Run();
             }
             catch (Exception e)
@@ -32,6 +34,7 @@ namespace son.Net_rpi
             }
         }
 
+        //Allow to configure configuration variable of external json
         private static void ConfigureServices(IServiceCollection services)
         {
             var configuration = new ConfigurationBuilder()
@@ -41,9 +44,8 @@ namespace son.Net_rpi
 
             services.AddSingleton(configuration);
 
+            //Add configuration file in the SonNet application
             services.Configure<AppConfiguration>(configuration.GetSection("AppConfiguration"));
-
-            // Add app
             services.AddTransient<SonNet>();
         }
 
